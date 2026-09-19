@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="stylesheet" href="birth.css"
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hey Joseph</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --void-1:#0a0611;
+    --void-2:#140a1f;
+    --scarlet:#e01236;
+    --scarlet-bright:#ff3355;
+    --scarlet-dim:#7a0d21;
+    --gold:#f3c144;
+    --gold-bright:#ffe08a;
+    --ink:#f6f1ea;
+    --ink-dim:#c9bfd4;
+    --glass:rgba(24,12,30,0.72);
+    --glass-border:rgba(255,80,110,0.35);
+  }
+
+  *{ box-sizing:border-box; }
+
+  html,body{
+    margin:0;
+    padding:0;
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    background:
+      radial-gradient(60% 50% at 50% 20%, #1b0e28 0%, transparent 60%),
+      radial-gradient(70% 60% at 80% 90%, #1a0a1a 0%, transparent 55%),
+      linear-gradient(180deg, var(--void-2) 0%, var(--void-1) 100%);
+    font-family:'Space Grotesk', system-ui, sans-serif;
+    color:var(--ink);
+  }
+
+  body{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    position:relative;
+  }
+
+  /* ambient stars in the sky */
+  .sky{
+    position:fixed;
+    inset:0;
+    z-index:0;
+    pointer-events:none;
+  }
+  .sky span{
+    position:absolute;
+    width:2px;
+    height:2px;
+    background:rgba(255,255,255,0.55);
+    border-radius:50%;
+    animation:twinkle 3.2s ease-in-out infinite;
+  }
+  @keyframes twinkle{
+    0%,100%{ opacity:.15; }
+    50%{ opacity:.9; }
+  }
+
+  /* ---------- MODAL ---------- */
+  .stage{
+    position:relative;
+    z-index:2;
+    width:100%;
+    height:100%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+
+  .modal{
+    position:relative;
+    width:min(88vw, 380px);
+    padding:44px 34px 38px;
+    border-radius:28px;
+    text-align:center;
+    background:var(--glass);
+    border:1px solid var(--glass-border);
+    backdrop-filter:blur(14px);
+    -webkit-backdrop-filter:blur(14px);
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,0.03) inset,
+      0 30px 60px -20px rgba(0,0,0,0.75),
+      0 0 70px -10px rgba(224,18,54,0.55),
+      0 0 140px -30px rgba(224,18,54,0.35);
+    animation:floaty 4.5s ease-in-out infinite;
+    transition:opacity .45s ease, transform .45s ease, filter .45s ease;
+  }
+
+  @keyframes floaty{
+    0%,100%{ transform:translateY(0px); }
+    50%{ transform:translateY(-10px); }
+  }
+
+  .modal.dissolving{
+    opacity:0;
+    transform:translateY(-6px) scale(0.92);
+    filter:blur(3px);
+    animation:none;
+  }
+
+  .modal h1{
+    margin:0 0 30px;
+    font-size:clamp(20px, 5.6vw, 25px);
+    line-height:1.3;
+    letter-spacing:0.01em;
+    font-weight:700;
+    color:var(--ink);
+    text-shadow:0 2px 14px rgba(224,18,54,0.45);
+  }
+
+  .btn-row{
+    display:flex;
+    gap:18px;
+    justify-content:center;
+    align-items:center;
+    position:relative;
+    min-height:56px;
+  }
+
+  button{
+    font-family:'Space Grotesk', sans-serif;
+    border:none;
+    cursor:pointer;
+    border-radius:14px;
+    padding:14px 30px;
+    font-size:16px;
+    font-weight:700;
+    letter-spacing:0.02em;
+  }
+
+  #yesBtn{
+    background:linear-gradient(160deg, var(--scarlet-bright), var(--scarlet-dim));
+    color:#fff;
+    box-shadow:0 10px 24px -8px rgba(224,18,54,0.75), 0 0 0 1px rgba(255,255,255,0.08) inset;
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  #yesBtn:hover{ transform:translateY(-2px); box-shadow:0 14px 28px -8px rgba(224,18,54,0.9); }
+  #yesBtn:active{ transform:translateY(0); }
+
+  #noBtn{
+    background:rgba(255,255,255,0.06);
+    color:var(--ink-dim);
+    box-shadow:0 0 0 1px rgba(255,255,255,0.12) inset;
+    position:relative;
+    will-change:transform;
+    transition:transform .12s ease-out;
+    z-index:5;
+  }
+
+  /* ---------- PARTICLES ---------- */
+  #particleField{
+    position:fixed;
+    inset:0;
+    z-index:10;
+    pointer-events:none;
+  }
+  .dust{
+    position:absolute;
+    border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, var(--scarlet-bright), var(--scarlet-dim) 70%, transparent 100%);
+    box-shadow:0 0 8px 1px rgba(255,50,80,0.85);
+    opacity:1;
+    animation:dustFly 950ms cubic-bezier(.2,.7,.3,1) forwards;
+  }
+  @keyframes dustFly{
+    0%{ opacity:1; transform:translate(0,0) scale(1) rotate(0deg); }
+    100%{ opacity:0; transform:translate(var(--tx), var(--ty)) scale(0.15) rotate(var(--rot)); }
+  }
+
+  /* ---------- STAR SCENE ---------- */
+  .star-scene{
+    position:fixed;
+    inset:0;
+    z-index:3;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    opacity:0;
+    pointer-events:none;
+  }
+  .star-scene.active{ opacity:1; }
+  .star-scene.scene-dissolving{
+    transition:opacity .9s ease, filter .9s ease;
+    opacity:0;
+    filter:blur(5px);
+    pointer-events:none;
+  }
+
+  .star-wrap{
+    position:absolute;
+    top:50%;
+    left:50%;
+  }
+
+  .main-star-wrap{
+    width:min(64vw, 300px);
+    height:min(64vw, 300px);
+    margin-top:calc(min(64vw, 300px) / -2);
+    margin-left:calc(min(64vw, 300px) / -2);
+    transform:scale(0);
+  }
+  .star-scene.active .main-star-wrap{
+    animation:starPop 650ms cubic-bezier(.2,1.4,.4,1) 60ms forwards;
+  }
+
+  .main-star{
+    width:100%;
+    height:100%;
+    display:block;
+    filter:
+      drop-shadow(0 0 22px var(--gold-bright))
+      drop-shadow(0 0 55px rgba(243,193,68,0.75))
+      drop-shadow(0 0 110px rgba(243,193,68,0.4));
+    animation:spin 7s linear infinite;
+    animation-play-state:paused;
+  }
+  .main-star polygon, .gold-star polygon{
+    stroke:#000;
+    stroke-width:4;
+    stroke-linejoin:round;
+  }
+  .star-scene.active .main-star{ animation-play-state:running; }
+
+  @keyframes starPop{
+    0%{ transform:scale(0) rotate(-40deg); }
+    70%{ transform:scale(1.12) rotate(6deg); }
+    100%{ transform:scale(1) rotate(0deg); }
+  }
+  @keyframes spin{
+    from{ transform:rotate(0deg); }
+    to{ transform:rotate(360deg); }
+  }
+
+  .bday-text{
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%) scale(0.6);
+    margin:0;
+    width:min(84vw, 420px);
+    text-align:center;
+    font-family:'Anton', 'Space Grotesk', sans-serif;
+    font-weight:400;
+    text-transform:uppercase;
+    font-size:clamp(28px, 8vw, 46px);
+    line-height:1.05;
+    letter-spacing:0.01em;
+    color:#fff8ec;
+    text-shadow:
+      0 0 10px rgba(255,255,255,0.5),
+      0 0 30px rgba(243,193,68,0.8),
+      0 0 60px rgba(224,18,54,0.6);
+    opacity:0;
+  }
+  .star-scene.active .bday-text{
+    animation:textPop 620ms cubic-bezier(.2,1.3,.4,1) 320ms forwards;
+  }
+  @keyframes textPop{
+    0%{ opacity:0; transform:translate(-50%,-50%) scale(0.5); }
+    70%{ opacity:1; transform:translate(-50%,-50%) scale(1.08); }
+    100%{ opacity:1; transform:translate(-50%,-50%) scale(1); }
+  }
+
+  .side-star{
+    width:min(30vw, 140px);
+    height:min(30vw, 140px);
+    margin-top:calc(min(30vw, 140px) / -2);
+    margin-left:calc(min(30vw, 140px) / -2);
+    opacity:0;
+  }
+  .gold-star{
+    width:100%;
+    height:100%;
+    display:block;
+    filter:
+      drop-shadow(0 0 14px var(--gold-bright))
+      drop-shadow(0 0 34px rgba(243,193,68,0.85));
+  }
+
+  .left-star{ --dir:-1; }
+  .right-star{ --dir:1; }
+
+  .left-star.emerge{
+    animation:emergeReturnLeft 1700ms cubic-bezier(.3,.7,.3,1) forwards;
+  }
+  .right-star.emerge{
+    animation:emergeReturnRight 1700ms cubic-bezier(.3,.7,.3,1) forwards;
+  }
+
+  @keyframes emergeReturnLeft{
+    0%{ opacity:0; transform:translate(calc(-90vw), -50%) scale(0.3) rotate(-120deg); }
+    35%{ opacity:1; transform:translate(calc(-50% - 34vw), -50%) scale(1) rotate(0deg); }
+    65%{ opacity:1; transform:translate(calc(-50% - 34vw), -50%) scale(1) rotate(20deg); }
+    100%{ opacity:0; transform:translate(calc(-90vw), -50%) scale(0.3) rotate(-140deg); }
+  }
+  @keyframes emergeReturnRight{
+    0%{ opacity:0; transform:translate(calc(90vw), -50%) scale(0.3) rotate(120deg); }
+    35%{ opacity:1; transform:translate(calc(-50% + 34vw), -50%) scale(1) rotate(0deg); }
+    65%{ opacity:1; transform:translate(calc(-50% + 34vw), -50%) scale(1) rotate(-20deg); }
+    100%{ opacity:0; transform:translate(calc(90vw), -50%) scale(0.3) rotate(140deg); }
+  }
+
+  /* ---------- "KNEW YOU'D LIKE IT" reveal ---------- */
+  .knew-text{
+    position:fixed;
+    inset:0;
+    z-index:15;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    margin:0;
+    padding:4vw 5vw;
+    font-family:'Anton', 'Space Grotesk', sans-serif;
+    font-weight:400;
+    text-transform:uppercase;
+    font-size:clamp(34px, 12vw, 130px);
+    line-height:1.02;
+    letter-spacing:0.01em;
+    color:dodgerblue;
+    text-shadow:
+      0 0 18px rgba(255,221,64,0.95),
+      0 0 46px rgba(255,205,60,0.8),
+      0 0 100px rgba(255,190,40,0.55);
+    opacity:0;
+    transform:scale(0.65) translateY(20px);
+    pointer-events:none;
+  }
+  .knew-text.pop{
+    animation:knewPop 600ms cubic-bezier(.2,1.35,.4,1) forwards;
+  }
+  .knew-text.float-away{
+    animation:knewFloat 550ms cubic-bezier(.5,0,.85,1) forwards;
+  }
+  @keyframes knewPop{
+    0%{ opacity:0; transform:scale(0.6) translateY(24px); }
+    70%{ opacity:1; transform:scale(1.06) translateY(-4px); }
+    100%{ opacity:1; transform:scale(1) translateY(0); }
+  }
+  @keyframes knewFloat{
+    0%{ opacity:1; transform:scale(1) translateY(0); }
+    100%{ opacity:0; transform:scale(0.82) translateY(-130vh); }
+  }
+
+  /* ---------- red paint pour ---------- */
+  .paint-overlay{
+    position:fixed;
+    inset:0;
+    z-index:20;
+    pointer-events:none;
+    background:
+      radial-gradient(circle at 94% 6%, rgba(255,50,70,0.4), transparent 42%),
+      linear-gradient(135deg, #4a060f 0%, #2c0309 55%, #180206 100%);
+    clip-path:inset(0 0 0 100%);
+    opacity:0;
+  }
+  .paint-overlay.pour{
+    opacity:1;
+    animation:pourWipe 1300ms cubic-bezier(.65,0,.35,1) forwards;
+  }
+  @keyframes pourWipe{
+    0%{ clip-path:inset(0 0 0 100%); }
+    100%{ clip-path:inset(0 0 0 0%); }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .modal{ animation:none; }
+    .main-star{ animation:none; }
+    .main-star-wrap{ animation:none; transform:scale(1); }
+    .bday-text{ animation:none; opacity:1; transform:translate(-50%,-50%) scale(1); }
+    .dust{ animation:none; opacity:0; }
+    .left-star.emerge, .right-star.emerge{ animation:none; opacity:0; }
+    #noBtn{ transition:none; }
+    .knew-text.pop{ animation:none; opacity:1; transform:scale(1) translateY(0); }
+    .knew-text.float-away{ animation:none; opacity:0; }
+    .paint-overlay.pour{ animation:none; opacity:1; clip-path:inset(0 0 0 0%); }
+    .star-scene.scene-dissolving{ transition:none; opacity:0; filter:none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="sky" id="sky" aria-hidden="true"></div>
+
+<div class="stage">
+  <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <h1 id="modalTitle">HEY JOSEPH YOU SURE???</h1>
+    <div class="btn-row">
+      <button id="yesBtn" type="button">YES</button>
+      <button id="noBtn" type="button">no</button>
+    </div>
+  </div>
+</div>
+
+<div id="particleField" aria-hidden="true"></div>
+
+<div class="star-scene" id="starScene" aria-hidden="true">
+  <div class="star-wrap main-star-wrap">
+    <svg class="main-star" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="scarletGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#ff5470"/>
+          <stop offset="55%" stop-color="#e01236"/>
+          <stop offset="100%" stop-color="#8c0d24"/>
+        </linearGradient>
+      </defs>
+      <polygon fill="url(#scarletGrad)" points="100,6 122,74 194,74 136,116 158,186 100,144 42,186 64,116 6,74 78,74"/>
+    </svg>
+  </div>
+
+  <h1 class="bday-text">HAPPY BIRTHDAY JOE!!!</h1>
+
+  <div class="star-wrap side-star left-star">
+    <svg class="gold-star" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="goldGradL" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#ffe9ab"/>
+          <stop offset="55%" stop-color="#f3c144"/>
+          <stop offset="100%" stop-color="#b9860f"/>
+        </linearGradient>
+      </defs>
+      <polygon fill="url(#goldGradL)" points="100,6 122,74 194,74 136,116 158,186 100,144 42,186 64,116 6,74 78,74"/>
+    </svg>
+  </div>
+
+  <div class="star-wrap side-star right-star">
+    <svg class="gold-star" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="goldGradR" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#ffe9ab"/>
+          <stop offset="55%" stop-color="#f3c144"/>
+          <stop offset="100%" stop-color="#b9860f"/>
+        </linearGradient>
+      </defs>
+      <polygon fill="url(#goldGradR)" points="100,6 122,74 194,74 136,116 158,186 100,144 42,186 64,116 6,74 78,74"/>
+    </svg>
+  </div>
+</div>
+
+<h1 class="knew-text" id="knewText" aria-hidden="true">KNEW YOU'D LIKE IT</h1>
+
+<div class="paint-overlay" id="paintOverlay" aria-hidden="true"></div>
+
+<script>
+(function(){
+  // ---------- ambient sky ----------
+  var sky = document.getElementById('sky');
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var starCount = reduceMotion ? 0 : 45;
+  for(var i=0;i<starCount;i++){
+    var s = document.createElement('span');
+    s.style.left = (Math.random()*100)+'vw';
+    s.style.top = (Math.random()*100)+'vh';
+    s.style.animationDelay = (Math.random()*3.2)+'s';
+    s.style.opacity = (0.2 + Math.random()*0.6).toFixed(2);
+    sky.appendChild(s);
+  }
+
+  var modal = document.getElementById('modal');
+  var yesBtn = document.getElementById('yesBtn');
+  var noBtn = document.getElementById('noBtn');
+  var particleField = document.getElementById('particleField');
+  var starScene = document.getElementById('starScene');
+  var leftStar = document.querySelector('.left-star');
+  var rightStar = document.querySelector('.right-star');
+  var knewText = document.getElementById('knewText');
+  var paintOverlay = document.getElementById('paintOverlay');
+
+  // ---------- "no" button flees the pointer ----------
+  var initCenter = null;
+  var offsetX = 0, offsetY = 0;
+
+  function captureInitCenter(){
+    var r = noBtn.getBoundingClientRect();
+    initCenter = { x: r.left + r.width/2 - offsetX, y: r.top + r.height/2 - offsetY };
+  }
+  captureInitCenter();
+  window.addEventListener('resize', function(){ offsetX = 0; offsetY = 0; noBtn.style.transform=''; captureInitCenter(); });
+
+  function fleeFrom(px, py){
+    if(!initCenter) captureInitCenter();
+    var curX = initCenter.x + offsetX;
+    var curY = initCenter.y + offsetY;
+    var dx = curX - px;
+    var dy = curY - py;
+    var dist = Math.hypot(dx, dy);
+    var threshold = 150;
+    if(dist < threshold){
+      var angle = Math.atan2(dy, dx) + (Math.random()-0.5)*0.4;
+      var flee = (threshold - dist) + 90;
+      var targetX = curX + Math.cos(angle)*flee;
+      var targetY = curY + Math.sin(angle)*flee;
+      var margin = 46;
+      targetX = Math.min(Math.max(targetX, margin), window.innerWidth - margin);
+      targetY = Math.min(Math.max(targetY, margin), window.innerHeight - margin);
+      offsetX = targetX - initCenter.x;
+      offsetY = targetY - initCenter.y;
+      var wobble = Math.max(-14, Math.min(14, (Math.cos(angle))*14));
+      noBtn.style.transform = 'translate(' + offsetX + 'px,' + offsetY + 'px) rotate(' + wobble + 'deg)';
+    }
+  }
+
+  function onPointerMove(e){
+    var point = e.touches && e.touches[0] ? e.touches[0] : e;
+    fleeFrom(point.clientX, point.clientY);
+  }
+
+  window.addEventListener('pointermove', onPointerMove, { passive:true });
+  window.addEventListener('touchmove', onPointerMove, { passive:true });
+
+  // belt-and-suspenders: any direct interaction just makes it dodge harder
+  ['pointerdown','pointerenter','click','touchstart'].forEach(function(evt){
+    noBtn.addEventListener(evt, function(e){
+      e.preventDefault();
+      var rect = noBtn.getBoundingClientRect();
+      fleeFrom(rect.left + rect.width/2, rect.top + rect.height/2);
+    }, { passive:false });
+  });
+
+  // ---------- "YES" triggers the dissolve + star sequence ----------
+  var fired = false;
+  yesBtn.addEventListener('click', function(){
+    if(fired) return;
+    fired = true;
+
+    window.removeEventListener('pointermove', onPointerMove);
+    window.removeEventListener('touchmove', onPointerMove);
+    yesBtn.disabled = true;
+    noBtn.style.pointerEvents = 'none';
+
+    var rect = modal.getBoundingClientRect();
+    modal.classList.add('dissolving');
+    spawnDust(rect);
+
+    setTimeout(function(){
+      if(modal.parentNode) modal.parentNode.removeChild(modal);
+      revealStars();
+    }, reduceMotion ? 50 : 1050);
+  });
+
+  function spawnDust(rect, count){
+    if(reduceMotion) return;
+    count = count || 60;
+    for(var i=0;i<count;i++){
+      var d = document.createElement('span');
+      d.className = 'dust';
+      var size = 4 + Math.random()*9;
+      d.style.width = size + 'px';
+      d.style.height = size + 'px';
+      var x = rect.left + Math.random()*rect.width;
+      var y = rect.top + Math.random()*rect.height;
+      d.style.left = x + 'px';
+      d.style.top = y + 'px';
+
+      var angle = Math.random()*Math.PI*2;
+      var dist = 60 + Math.random()*180;
+      var tx = Math.cos(angle)*dist;
+      var ty = Math.sin(angle)*dist + 40 + Math.random()*60; // slight downward drift
+      d.style.setProperty('--tx', tx + 'px');
+      d.style.setProperty('--ty', ty + 'px');
+      d.style.setProperty('--rot', (Math.random()*280 - 140) + 'deg');
+      d.style.animationDelay = (Math.random()*180) + 'ms';
+
+      particleField.appendChild(d);
+      (function(el){
+        setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); }, 1400);
+      })(d);
+    }
+  }
+
+  function revealStars(){
+    starScene.classList.add('active');
+    setTimeout(function(){
+      leftStar.classList.add('emerge');
+      rightStar.classList.add('emerge');
+
+      if(reduceMotion){
+        setTimeout(blankOut, 400);
+      } else {
+        rightStar.addEventListener('animationend', blankOut, { once:true });
+      }
+    }, reduceMotion ? 0 : 3000);
+  }
+
+  function blankOut(){
+    spawnDust({ left:0, top:0, width:window.innerWidth, height:window.innerHeight }, 90);
+    starScene.classList.add('scene-dissolving');
+
+    setTimeout(function(){
+      starScene.style.display = 'none';
+      showKnewText();
+    }, reduceMotion ? 100 : 950);
+  }
+
+  function showKnewText(){
+    knewText.classList.add('pop');
+
+    setTimeout(function(){
+      knewText.classList.remove('pop');
+      knewText.classList.add('float-away');
+
+      setTimeout(startPaintWipe, reduceMotion ? 50 : 600);
+    }, reduceMotion ? 800 : 5000);
+  }
+
+  function startPaintWipe(){
+    paintOverlay.classList.add('pour');
+
+    setTimeout(function(){
+      try{ window.close(); } catch(err){ /* some browsers block script-closing tabs they didn't open */ }
+    }, reduceMotion ? 100 : 1350);
+  }
+})();
+</script>
+
+</body>
+</html>
